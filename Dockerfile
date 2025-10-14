@@ -19,6 +19,9 @@ RUN npx prisma generate
 # Compilar aplicação
 RUN npm run build
 
+# Debug: verificar se os arquivos foram gerados
+RUN ls -la dist/
+
 # Remover dev dependencies após build
 RUN npm prune --production
 
