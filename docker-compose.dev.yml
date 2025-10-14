@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  # Banco de dados PostgreSQL para desenvolvimento
+  postgres:
+    image: postgres:15-alpine
+    container_name: octavio-sync-db-dev
+    environment:
+      POSTGRES_DB: octavio_sync_dev
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5433:5432"  # Porta diferente para não conflitar com produção
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+    networks:
+      - octavio-sync-dev-network
+
+  # Adminer - Interface web para gerenciar o banco de dados
+  adminer:
+    image: adminer:4.8.1
+    container_name: octavio-sync-adminer-dev
+    ports:
+      - "8081:8080"  # Porta diferente para não conflitar com produção
+    depends_on:
+      - postgres
+    networks:
+      - octavio-sync-dev-network
+    environment:
+      ADMINER_DEFAULT_SERVER: postgres
+
+volumes:
+  postgres_dev_data:
+
+networks:
+  octavio-sync-dev-network:
+    driver: bridge
+
+
+
+
+

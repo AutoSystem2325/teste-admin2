@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  # Banco de dados PostgreSQL
+  postgres:
+    image: postgres:15-alpine
+    container_name: octavio-sync-db
+    environment:
+      POSTGRES_DB: octavio_sync
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - octavio-sync-network
+
+  # Aplicação NestJS
+  app:
+    build: .
+    container_name: octavio-sync-api
+    environment:
+      DATABASE_URL: "postgresql://postgres:postgres@postgres:5432/octavio_sync?schema=public"
+      JWT_SECRET: "your-super-secret-jwt-key-here"
+      JWT_EXPIRES_IN: "24h"
+      PORT: 3000
+      NODE_ENV: production
+    ports:
+      - "3000:3000"
+    depends_on:
+      - postgres
+    networks:
+      - octavio-sync-network
+    command: >
+      sh -c "
+        npx prisma migrate deploy &&
+        npm run start:prod
+      "
+
+  # Adminer - Interface web para gerenciar o banco de dados
+  adminer:
+    image: adminer:4.8.1
+    container_name: octavio-sync-adminer
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+    networks:
+      - octavio-sync-network
+    environment:
+      ADMINER_DEFAULT_SERVER: postgres
+
+volumes:
+  postgres_data:
+
+networks:
+  octavio-sync-network:
+    driver: bridge
