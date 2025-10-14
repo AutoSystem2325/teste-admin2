@@ -22,8 +22,13 @@ COPY . .
 # Compilar aplicação
 RUN npm run build
 
-# Verificar se o build foi bem-sucedido
-RUN ls -la dist/ && test -f dist/main.js
+# Debug: verificar o que foi gerado
+RUN echo "=== Conteúdo completo da pasta dist ===" && \
+    find dist/ -type f -name "*.js" | head -20 && \
+    echo "=== Estrutura da pasta dist ===" && \
+    ls -la dist/ && \
+    echo "=== Conteúdo da pasta dist/src (se existir) ===" && \
+    ls -la dist/src/ 2>/dev/null || echo "dist/src não existe"
 
 # Etapa de produção
 FROM node:18-alpine
