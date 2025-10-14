@@ -7,8 +7,8 @@ WORKDIR /app
 # Copiar arquivos de dependências
 COPY package*.json ./
 
-# Instalar dependências
-RUN npm ci --only=production
+# Instalar todas as dependências (incluindo dev dependencies para build)
+RUN npm ci
 
 # Copiar código fonte
 COPY . .
@@ -18,6 +18,9 @@ RUN npx prisma generate
 
 # Compilar aplicação
 RUN npm run build
+
+# Remover dev dependencies após build
+RUN npm prune --production
 
 # Expor porta
 EXPOSE 3000
