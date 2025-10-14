@@ -164,6 +164,9 @@ dist
 .yarn/install-state.gz
 .pnp.*
 
+# Mini-apps folder
+mini-apps/
+
 
 
 
