@@ -27,7 +27,13 @@ export class FilhosController {
   ) {
     return this.filhosService.updateValidade(id, updateValidadeDto);
   }
+
+  @Get(':id/nome')
+  async getNome(@Param('id') id: string) {
+    return this.filhosService.getNome(id);
+  }
 }
+
 
 
 

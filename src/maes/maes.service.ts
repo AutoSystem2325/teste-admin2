@@ -1,11 +1,11 @@
-import { Injectable, ConflictException } from '@nestjs/common';
+import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateMaeDto, MaeResponseDto } from '../common/dto/mae.dto';
 
 @Injectable()
 export class MaesService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   async create(createMaeDto: CreateMaeDto): Promise<MaeResponseDto> {
     const { nome, email, senha } = createMaeDto;
@@ -57,7 +57,21 @@ export class MaesService {
       },
     });
   }
+
+  async getNome(id: string): Promise<{ nome: string }> {
+    const mae = await this.prisma.mae.findUnique({
+      where: { id },
+      select: { nome: true },
+    });
+
+    if (!mae) {
+      throw new NotFoundException('Mãe não encontrada');
+    }
+
+    return { nome: mae.nome };
+  }
 }
+
 
 
 

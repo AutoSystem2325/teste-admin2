@@ -130,7 +130,21 @@ export class FilhosService {
       },
     });
   }
+
+  async getNome(id: string): Promise<{ nome: string }> {
+    const filho = await this.prisma.filho.findUnique({
+      where: { id },
+      select: { nome: true },
+    });
+
+    if (!filho) {
+      throw new NotFoundException('Filho não encontrado');
+    }
+
+    return { nome: filho.nome };
+  }
 }
+
 
 
 

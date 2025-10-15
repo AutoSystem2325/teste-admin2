@@ -19,6 +19,16 @@ export class AuthController {
           'POST /auth/login-mae': 'Login de Mãe',
           'POST /auth/login-filho': 'Login de Filho',
         },
+        admin: {
+          'POST /admin/login-master': 'Login Master Admin',
+          'POST /admin/create-mae': 'Criar Mãe (Master Only)',
+          'POST /admin/create-filho': 'Criar Filho (Master Only)',
+          'GET /admin/maes': 'Listar todas as Mães (Master Only)',
+          'GET /admin/filhos': 'Listar todos os Filhos (Master Only)',
+        },
+        api: {
+          'GET /api/names/:userId/:userType': 'Buscar nomes da Mãe e Filho',
+        },
         maes: {
           'POST /maes': 'Cadastrar Mãe',
           'GET /maes/:id': 'Buscar Mãe por ID',

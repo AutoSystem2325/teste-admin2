@@ -5,6 +5,7 @@ import { AuthModule } from './auth/auth.module';
 import { MaesModule } from './maes/maes.module';
 import { FilhosModule } from './filhos/filhos.module';
 import { RealtimeModule } from './realtime/realtime.module';
+import { AdminModule } from './admin/admin.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { RealtimeModule } from './realtime/realtime.module';
     MaesModule,
     FilhosModule,
     RealtimeModule,
+    AdminModule,
   ],
 })
 export class AppModule {}

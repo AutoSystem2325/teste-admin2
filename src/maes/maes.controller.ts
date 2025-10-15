@@ -17,7 +17,13 @@ export class MaesController {
   async findOne(@Param('id') id: string) {
     return this.maesService.findById(id);
   }
+
+  @Get(':id/nome')
+  async getNome(@Param('id') id: string) {
+    return this.maesService.getNome(id);
+  }
 }
+
 
 
 
