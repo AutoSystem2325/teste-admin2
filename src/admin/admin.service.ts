@@ -22,6 +22,26 @@ export interface CreateFilhoDto {
   validade: string;
 }
 
+export interface CreateAdminDto {
+  nome: string;
+  email: string;
+  senha: string;
+  isMaster?: boolean;
+}
+
+export interface UpdateMaeDto {
+  nome?: string;
+  email?: string;
+  senha?: string;
+}
+
+export interface UpdateFilhoDto {
+  nome?: string;
+  email?: string;
+  senha?: string;
+  validade?: string;
+}
+
 export interface AuthResponseDto {
   access_token: string;
   user: {
@@ -45,7 +65,7 @@ export class AdminService {
   constructor(
     private prisma: PrismaService,
     private jwtService: JwtService,
-  ) {}
+  ) { }
 
   async loginMasterAdmin(loginAdminDto: LoginAdminDto): Promise<AuthResponseDto> {
     const { email, senha } = loginAdminDto;
@@ -208,6 +228,207 @@ export class AdminService {
     });
 
     return filhos;
+  }
+
+  async createAdmin(createAdminDto: CreateAdminDto): Promise<any> {
+    const { nome, email, senha, isMaster = false } = createAdminDto;
+
+    // Verificar se email já existe
+    const existingAdmin = await this.prisma.admin.findUnique({
+      where: { email },
+    });
+
+    if (existingAdmin) {
+      throw new ConflictException('Email já está em uso');
+    }
+
+    // Hash da senha
+    const hashedPassword = await bcrypt.hash(senha, 10);
+
+    // Criar admin
+    const admin = await this.prisma.admin.create({
+      data: {
+        nome,
+        email,
+        senha: hashedPassword,
+        isMaster,
+      },
+    });
+
+    return {
+      id: admin.id,
+      nome: admin.nome,
+      email: admin.email,
+      isMaster: admin.isMaster,
+      createdAt: admin.createdAt,
+    };
+  }
+
+  async getAllAdmins(): Promise<any[]> {
+    const admins = await this.prisma.admin.findMany({
+      select: {
+        id: true,
+        nome: true,
+        email: true,
+        isMaster: true,
+        createdAt: true,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
+    return admins;
+  }
+
+  async updateMae(id: string, updateMaeDto: UpdateMaeDto): Promise<any> {
+    const { nome, email, senha } = updateMaeDto;
+
+    // Verificar se a mãe existe
+    const existingMae = await this.prisma.mae.findUnique({
+      where: { id },
+    });
+
+    if (!existingMae) {
+      throw new NotFoundException('Mãe não encontrada');
+    }
+
+    // Se email foi alterado, verificar se não está em uso
+    if (email && email !== existingMae.email) {
+      const emailInUse = await this.prisma.mae.findUnique({
+        where: { email },
+      });
+
+      if (emailInUse) {
+        throw new ConflictException('Email já está em uso');
+      }
+    }
+
+    // Preparar dados para atualização
+    const updateData: any = {};
+    if (nome) updateData.nome = nome;
+    if (email) updateData.email = email;
+    if (senha) updateData.senha = await bcrypt.hash(senha, 10);
+
+    // Atualizar mãe
+    const updatedMae = await this.prisma.mae.update({
+      where: { id },
+      data: updateData,
+    });
+
+    return {
+      id: updatedMae.id,
+      nome: updatedMae.nome,
+      email: updatedMae.email,
+      updatedAt: updatedMae.updatedAt,
+    };
+  }
+
+  async deleteMae(id: string): Promise<any> {
+    // Verificar se a mãe existe
+    const existingMae = await this.prisma.mae.findUnique({
+      where: { id },
+      include: {
+        filhos: true,
+      },
+    });
+
+    if (!existingMae) {
+      throw new NotFoundException('Mãe não encontrada');
+    }
+
+    // Deletar mãe (filhos serão deletados automaticamente por cascade)
+    await this.prisma.mae.delete({
+      where: { id },
+    });
+
+    return {
+      message: 'Mãe deletada com sucesso',
+      deletedMae: {
+        id: existingMae.id,
+        nome: existingMae.nome,
+        email: existingMae.email,
+      },
+      deletedFilhos: existingMae.filhos.length,
+    };
+  }
+
+  async updateFilho(id: string, updateFilhoDto: UpdateFilhoDto): Promise<any> {
+    const { nome, email, senha, validade } = updateFilhoDto;
+
+    // Verificar se o filho existe
+    const existingFilho = await this.prisma.filho.findUnique({
+      where: { id },
+      include: { mae: true },
+    });
+
+    if (!existingFilho) {
+      throw new NotFoundException('Filho não encontrado');
+    }
+
+    // Se email foi alterado, verificar se não está em uso
+    if (email && email !== existingFilho.email) {
+      const emailInUse = await this.prisma.filho.findUnique({
+        where: { email },
+      });
+
+      if (emailInUse) {
+        throw new ConflictException('Email já está em uso');
+      }
+    }
+
+    // Preparar dados para atualização
+    const updateData: any = {};
+    if (nome) updateData.nome = nome;
+    if (email) updateData.email = email;
+    if (senha) updateData.senha = await bcrypt.hash(senha, 10);
+    if (validade) updateData.validade = new Date(validade);
+
+    // Atualizar filho
+    const updatedFilho = await this.prisma.filho.update({
+      where: { id },
+      data: updateData,
+      include: { mae: true },
+    });
+
+    return {
+      id: updatedFilho.id,
+      nome: updatedFilho.nome,
+      email: updatedFilho.email,
+      validade: updatedFilho.validade,
+      mae: {
+        id: updatedFilho.mae.id,
+        nome: updatedFilho.mae.nome,
+      },
+      updatedAt: updatedFilho.updatedAt,
+    };
+  }
+
+  async deleteFilho(id: string): Promise<any> {
+    // Verificar se o filho existe
+    const existingFilho = await this.prisma.filho.findUnique({
+      where: { id },
+      include: { mae: true },
+    });
+
+    if (!existingFilho) {
+      throw new NotFoundException('Filho não encontrado');
+    }
+
+    // Deletar filho
+    await this.prisma.filho.delete({
+      where: { id },
+    });
+
+    return {
+      message: 'Filho deletado com sucesso',
+      deletedFilho: {
+        id: existingFilho.id,
+        nome: existingFilho.nome,
+        email: existingFilho.email,
+        mae: existingFilho.mae.nome,
+      },
+    };
   }
 
   async getNames(userId: string, userType: string): Promise<NamesResponseDto> {

@@ -1,5 +1,5 @@
-import { Controller, Post, Get, Body, HttpCode, HttpStatus, Param, UseGuards } from '@nestjs/common';
-import { AdminService, LoginAdminDto, CreateMaeDto, CreateFilhoDto } from './admin.service';
+import { Controller, Post, Get, Body, HttpCode, HttpStatus, Param, UseGuards, Put, Delete } from '@nestjs/common';
+import { AdminService, LoginAdminDto, CreateMaeDto, CreateFilhoDto, CreateAdminDto, UpdateMaeDto, UpdateFilhoDto } from './admin.service';
 import { MasterAdminGuard } from './guards/master-admin.guard';
 
 @Controller()
@@ -34,6 +34,42 @@ export class AdminController {
   @UseGuards(MasterAdminGuard)
   async getAllFilhos() {
     return this.adminService.getAllFilhos();
+  }
+
+  @Post('admin/create-admin')
+  @UseGuards(MasterAdminGuard)
+  async createAdmin(@Body() createAdminDto: CreateAdminDto) {
+    return this.adminService.createAdmin(createAdminDto);
+  }
+
+  @Get('admin/admins')
+  @UseGuards(MasterAdminGuard)
+  async getAllAdmins() {
+    return this.adminService.getAllAdmins();
+  }
+
+  @Put('admin/mae/:id')
+  @UseGuards(MasterAdminGuard)
+  async updateMae(@Param('id') id: string, @Body() updateMaeDto: UpdateMaeDto) {
+    return this.adminService.updateMae(id, updateMaeDto);
+  }
+
+  @Delete('admin/mae/:id')
+  @UseGuards(MasterAdminGuard)
+  async deleteMae(@Param('id') id: string) {
+    return this.adminService.deleteMae(id);
+  }
+
+  @Put('admin/filho/:id')
+  @UseGuards(MasterAdminGuard)
+  async updateFilho(@Param('id') id: string, @Body() updateFilhoDto: UpdateFilhoDto) {
+    return this.adminService.updateFilho(id, updateFilhoDto);
+  }
+
+  @Delete('admin/filho/:id')
+  @UseGuards(MasterAdminGuard)
+  async deleteFilho(@Param('id') id: string) {
+    return this.adminService.deleteFilho(id);
   }
 
   @Get('api/names/:userId/:userType')
