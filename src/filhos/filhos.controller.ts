@@ -32,6 +32,12 @@ export class FilhosController {
   async getNome(@Param('id') id: string) {
     return this.filhosService.getNome(id);
   }
+
+  @Get(':id/mae')
+  @UseGuards(JwtAuthGuard)
+  async getMaeInfo(@Param('id') id: string) {
+    return this.filhosService.getMaeInfo(id);
+  }
 }
 
 

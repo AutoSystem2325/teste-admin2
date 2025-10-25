@@ -5,7 +5,7 @@ import { CreateFilhoDto, UpdateValidadeDto, FilhoResponseDto } from '../common/d
 
 @Injectable()
 export class FilhosService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   async create(createFilhoDto: CreateFilhoDto): Promise<FilhoResponseDto> {
     const { nome, email, senha, maeId, validade } = createFilhoDto;
@@ -142,6 +142,35 @@ export class FilhosService {
     }
 
     return { nome: filho.nome };
+  }
+
+  async getMaeInfo(filhoId: string) {
+    const filho = await this.prisma.filho.findUnique({
+      where: { id: filhoId },
+      include: {
+        mae: {
+          select: {
+            id: true,
+            nome: true,
+            email: true,
+          },
+        },
+      },
+    });
+
+    if (!filho) {
+      throw new NotFoundException('Filho não encontrado');
+    }
+
+    if (!filho.mae) {
+      throw new NotFoundException('Mãe não encontrada');
+    }
+
+    return {
+      id: filho.mae.id,
+      nome: filho.mae.nome,
+      email: filho.mae.email,
+    };
   }
 }
 
