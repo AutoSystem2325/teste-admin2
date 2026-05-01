@@ -1,57 +1,55 @@
-# Etapa de build
+# =========================
+# Etapa 1: Build
+# =========================
 FROM node:18-alpine AS builder
 
-# Instalar dependências do sistema
+# Dependências do sistema
 RUN apk add --no-cache openssl
 
 WORKDIR /app
 
-# Copiar arquivos de dependências
+# Copiar apenas package.json primeiro (cache)
 COPY package*.json ./
-COPY prisma ./prisma/
 
-# Instalar todas as dependências (incluindo dev)
+# Instalar dependências (incluindo dev)
 RUN npm ci
 
-# Gerar cliente Prisma
-RUN npx prisma generate
-
-# Copiar código fonte
+# Copiar resto do projeto
 COPY . .
 
-# Compilar aplicação
+# Gerar Prisma Client
+RUN npx prisma generate
+
+# Build do NestJS
 RUN npm run build
 
-# Verificar se o build foi bem-sucedido
-RUN ls -la dist/src/ && test -f dist/src/main.js
+# Verificação (debug opcional)
+RUN ls -la dist && test -f dist/main.js
 
-# Etapa de produção
+
+# =========================
+# Etapa 2: Produção
+# =========================
 FROM node:18-alpine
 
-# Instalar dependências do sistema
 RUN apk add --no-cache openssl
 
 WORKDIR /app
 
-# Copiar arquivos compilados da etapa anterior
+# Copiar apenas o necessário
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/prisma ./prisma
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder /app/node_modules ./node_modules
 
-# Instalar apenas dependências de produção
-RUN npm ci --omit=dev
+# (Opcional) Reinstalar só deps de produção
+# RUN npm ci --omit=dev
 
-# Gerar cliente Prisma novamente (necessário para produção)
+# Gerar Prisma Client em runtime
 RUN npx prisma generate
 
-# Expor porta
+# Porta (Railway usa env, mas ok expor)
 EXPOSE 3000
 
-# Comando para iniciar a aplicação
-CMD ["node", "dist/src/main.js"]
-
-
-
-
-
+# Start correto
+CMD ["node", "dist/main.js"]
